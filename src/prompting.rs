@@ -29,16 +29,28 @@ pub struct LlmPayload {
 }
 
 impl LlmPayload {
-  pub fn new_structured(model: &str, system_msg: &str, user_msg: &str, schema: Value) -> Self {
+  pub fn new_structured(
+    model: &str,
+    name: &str,
+    system_msg: &str,
+    user_msg: &str,
+    schema: Value,
+  ) -> Self {
     Self {
       model: model.to_string(),
       input: vec![
-        Message { role: "system".into(), content: system_msg.into() },
-        Message { role: "user".into(), content: user_msg.into() },
+        Message {
+          role: "system".into(),
+          content: system_msg.into(),
+        },
+        Message {
+          role: "user".into(),
+          content: user_msg.into(),
+        },
       ],
       text: TextConfig {
         format: JsonFormat {
-          name: "essay_grading_response".into(),
+          name: name.to_string(),
           r#type: "json_schema".into(),
           strict: true,
           schema,
@@ -53,19 +65,16 @@ pub struct PromptFilter;
 impl PromptFilter {
   pub fn build_llm_payload(payload: Payload) -> LlmPayload {
     let schema = Self::generate_grading_schema(&payload);
-    
-    let system_prompt = "You are an objective academic evaluator. \
-      Provide a numerical score and feedback for each criterion.";
 
     let user_prompt = format!(
       "Assignment: {}\n\nEssays: {:?}",
-      payload.rubric.title,
-      payload.essays
+      payload.rubric.title, payload.essays
     );
 
     LlmPayload::new_structured(
-      "gpt-4o-2024-08-06",
-      system_prompt,
+      &payload.model,
+      &payload.name,
+      &payload.system_prompt,
       &user_prompt,
       schema,
     )
@@ -77,7 +86,7 @@ impl PromptFilter {
 
     for criterion in &payload.rubric.criteria {
       let key = criterion.name.to_lowercase().replace(' ', "_");
-      
+
       properties.insert(
         key.clone(),
         json!({
@@ -101,3 +110,4 @@ impl PromptFilter {
     })
   }
 }
+
