@@ -18,7 +18,7 @@ pub struct Rubric {
 impl Rubric {
   pub fn validate_sum(&self) -> bool {
     let sum: f64 = self.criteria.iter().map(|c| c.max_score).sum();
-    (sum - self.total_score).abs() < f64::EPSILON
+    (sum - self.total_score).abs() < 1e-9
   }
 }
 
@@ -31,16 +31,50 @@ pub struct Essay {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Payload {
-  pub essays: Vec<Essay>,
+  pub api_key: String,
+  pub model: String,
+  pub name: String,
+  pub system_prompt: String,
   pub rubric: Rubric,
+  pub essays: Vec<Essay>,
 }
 
 impl Payload {
-  pub fn new(essays: Vec<Essay>, rubric: Rubric) -> Self {
-    Self { essays, rubric }
+  pub fn new(
+    api_key: String,
+    model: String,
+    name: String,
+    system_prompt: String,
+    rubric: Rubric,
+    essays: Vec<Essay>,
+  ) -> Self {
+    Self {
+      api_key,
+      model,
+      name,
+      system_prompt,
+      rubric,
+      essays,
+    }
   }
 
   pub fn validate(&self) -> Result<(), String> {
+    if self.api_key.trim().is_empty() {
+      return Err("API Key cannot be empty".to_string());
+    }
+
+    if self.model.trim().is_empty() {
+      return Err("Model identifier cannot be empty".to_string());
+    }
+
+    if self.name.trim().is_empty() {
+      return Err("Schema name cannot be empty".to_string());
+    }
+
+    if self.system_prompt.trim().is_empty() {
+      return Err("System prompt cannot be empty".to_string());
+    }
+
     if self.essays.is_empty() {
       return Err("Payload must contain at least one essay".to_string());
     }
@@ -59,12 +93,13 @@ impl Payload {
   }
 }
 
-/// Filter logic for input processing
 pub struct InputFilter;
 
 impl InputFilter {
   pub fn process_payload(payload: Payload) -> io::Result<Payload> {
-    payload.validate().map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
+    payload
+      .validate()
+      .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
     Ok(payload)
   }
 }
@@ -73,27 +108,52 @@ impl InputFilter {
 mod tests {
   use super::*;
 
-  #[test]
-  fn test_rubric_validation() {
-    let rubric = Rubric {
-      title: "Test".to_string(),
+  fn mock_rubric() -> Rubric {
+    Rubric {
+      title: "Test".into(),
       total_score: 10.0,
       criteria: vec![
-        Criterion { name: "C1".into(), max_score: 5.0, description: "D".into() },
-        Criterion { name: "C2".into(), max_score: 5.0, description: "D".into() },
+        Criterion {
+          name: "C1".into(),
+          max_score: 10.0,
+          description: "D".into(),
+        },
       ],
-    };
-    assert!(rubric.validate_sum());
+    }
   }
 
   #[test]
-  fn test_invalid_payload() {
-    let rubric = Rubric {
-      title: "Test".to_string(),
-      total_score: 10.0,
-      criteria: vec![],
-    };
-    let payload = Payload::new(vec![], rubric);
+  fn test_valid_payload() {
+    let payload = Payload::new(
+      "sk-123".into(),
+      "gpt-4o".into(),
+      "grading_schema".into(),
+      "You are a helpful assistant".into(),
+      mock_rubric(),
+      vec![Essay {
+        title: "T".into(),
+        content: "C".into(),
+        author: None,
+      }],
+    );
+    assert!(payload.validate().is_ok());
+  }
+
+  #[test]
+  fn test_missing_fields() {
+    let payload = Payload::new(
+      "sk-123".into(),
+      "".into(),
+      "".into(),
+      "Prompt".into(),
+      mock_rubric(),
+      vec![Essay {
+        title: "T".into(),
+        content: "C".into(),
+        author: None,
+      }],
+    );
     assert!(payload.validate().is_err());
   }
 }
+
