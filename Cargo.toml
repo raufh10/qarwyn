@@ -3,6 +3,10 @@ name = "qarwyn"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+name = "qarwyn"
+crate-type = ["cdylib", "rlib"]
+
 [dependencies]
 # Async Runtime
 tokio = { version = "1.40", features = ["full"] }
@@ -17,3 +21,7 @@ serde_json = "1.0"
 # Error Handling
 anyhow = "1.0"
 
+# Python Bindings
+pyo3 = { version = "0.28", features = ["extension-module", "abi3-py312"] }
+pyo3-async-runtimes = { version = "0.28", features = ["tokio-runtime"] }
+pythonize = "0.28.0"

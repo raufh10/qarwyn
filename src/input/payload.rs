@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::io;
 use pyo3::prelude::*;
 
-#[pyclass]
+#[pyclass(from_py_object)]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Criterion {
   #[pyo3(get, set)]
@@ -21,7 +21,7 @@ impl Criterion {
   }
 }
 
-#[pyclass]
+#[pyclass(from_py_object)]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Rubric {
   #[pyo3(get, set)]
@@ -45,7 +45,7 @@ impl Rubric {
   }
 }
 
-#[pyclass]
+#[pyclass(from_py_object)]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Essay {
   #[pyo3(get, set)]
@@ -64,7 +64,7 @@ impl Essay {
   }
 }
 
-#[pyclass]
+#[pyclass(from_py_object)]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Payload {
   #[pyo3(get, set)]
@@ -103,7 +103,8 @@ impl Payload {
   }
 
   pub fn validate_py(&self) -> PyResult<()> {
-    self.validate().map_err(|e| pyo3::exceptions::PyValueError::new_err(e))
+    self.validate()
+      .map_err(|e| pyo3::exceptions::PyValueError::new_err(e))
   }
 }
 
@@ -140,3 +141,38 @@ impl InputFilter {
   }
 }
 
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  fn mock_rubric() -> Rubric {
+    Rubric {
+      title: "Test".into(),
+      total_score: 10.0,
+      criteria: vec![
+        Criterion {
+          name: "C1".into(),
+          max_score: 10.0,
+          description: "D".into(),
+        },
+      ],
+    }
+  }
+
+  #[test]
+  fn test_valid_payload() {
+    let payload = Payload::new(
+      "sk-123".into(),
+      "gpt-4o".into(),
+      "grading_schema".into(),
+      "You are a helpful assistant".into(),
+      mock_rubric(),
+      vec![Essay {
+        title: "T".into(),
+        content: "C".into(),
+        author: None,
+      }],
+    );
+    assert!(payload.validate().is_ok());
+  }
+}

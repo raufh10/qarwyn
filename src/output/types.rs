@@ -1,9 +1,9 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use pyo3::prelude::*;
-use pythonize::pythonize;
+use pythonize::{depythonize, pythonize};
 
-#[pyclass]
+#[pyclass(from_py_object)]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CriterionGrade {
   #[pyo3(get, set)]
@@ -12,7 +12,15 @@ pub struct CriterionGrade {
   pub feedback: String,
 }
 
-#[pyclass]
+#[pymethods]
+impl CriterionGrade {
+  #[new]
+  pub fn new(score: f64, feedback: String) -> Self {
+    Self { score, feedback }
+  }
+}
+
+#[pyclass(from_py_object)]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct GradeReport {
   pub results: Value,
@@ -20,9 +28,17 @@ pub struct GradeReport {
 
 #[pymethods]
 impl GradeReport {
+  #[new]
+  pub fn new(results: Bound<'_, PyAny>) -> PyResult<Self> {
+    let val: Value = depythonize(&results)
+      .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
+    Ok(Self { results: val })
+  }
+
   #[getter]
-  pub fn results(&self, py: Python<'_>) -> PyResult<PyObject> {
-    pythonize(py, &self.results).map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))
+  pub fn results<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+    pythonize(py, &self.results)
+      .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))
   }
 }
 
