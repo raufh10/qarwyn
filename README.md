@@ -1,6 +1,6 @@
 # Qarwyn 🦅
 
-**Qarwyn** is a simple Python library that uses AI to grade essays based on your specific rules. It handles the complicated parts of talking to OpenAI and ensures you always get back clean, organized data.
+**Qarwyn** is a simple Python library that uses LLM to grade essays based on your specific rules, utilizing Pipe & Filters architecture on Rust.
 
 ---
 
@@ -58,11 +58,4 @@ report = qarwyn.run_grading_pipeline(payload)
 # Your results come back as a standard Python dictionary
 print(report.results)
 
-```
-## 🛠 Features
- * **Reliable Data**: You always get a clean Python dictionary back, never a messy string of text.
- * **Fast & Safe**: Built with a Rust core to ensure high performance and data validation.
- * **Automatic Math**: It checks if your rubric scores add up correctly before starting the job.
-## 📄 License
-MIT
 ```
