@@ -35,7 +35,6 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          # This installs the versions needed for the build environment
           python-version: |
             3.10
             3.11
@@ -43,13 +42,13 @@ jobs:
 
       - name: Build wheels
         uses: PyO3/maturin-action@v1
+        env:
+          AWS_LC_SYS_PREGENERATED: "1"
         with:
           target: ${{ matrix.target }}
           command: build
-          # --find-interpreter looks for all versions installed in the Setup Python step
           args: --release --out dist --find-interpreter --strip
           sccache: 'true'
-          # Required for Linux aarch64 cross-compilation on ubuntu-latest
           manylinux: auto 
 
       - name: Upload wheels
