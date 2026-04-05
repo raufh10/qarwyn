@@ -6,7 +6,7 @@
 
 ## 🚀 Installation
 
-You can install Qarwyn directly using `pip`:
+You can install Qarwyn directly using `pip` for Python 3.10 and onwards:
 
 ```bash
 pip install qarwyn
