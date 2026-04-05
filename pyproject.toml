@@ -4,13 +4,21 @@ build-backend = "maturin"
 
 [project]
 name = "qarwyn"
-version = "0.1.0"
+version = "0.1.1"
 description = "Rust-powered LLM essay grading engine"
-requires-python = ">=3.12"
-authors = [{name = "Rauf Hamidy"}]
+readme = {file = "README.md", content-type = "text/markdown"}
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [{name = "Rauf Hamidy", email = "raufhamidy10@gmail.com"}]
+repository = "https://github.com/raufh10/qarwyn"
+keywords = ["llm", "grading"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Rust",
+    "Operating System :: OS Independent",
+]
 dependencies = []
 
 [tool.maturin]
-features = ["pyo3/abi3-py312", "pyo3/extension-module"]
+features = ["pyo3/abi3-py310", "pyo3/extension-module"]
 module-name = "qarwyn"
-
